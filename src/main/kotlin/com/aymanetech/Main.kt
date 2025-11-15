@@ -1,6 +1,7 @@
 package com.aymanetech
 
 import com.aymanetech.Expr.*
+import com.aymanetech.TokenType.EOF
 import com.aymanetech.TokenType.MINUS
 import com.aymanetech.TokenType.STAR
 import java.io.BufferedReader
@@ -69,5 +70,12 @@ fun error(line: Int, message: String) {
 
 fun report(line: Int, where: String, message: String) {
     err.println("[line $line] Error $where: $message")
+}
+
+fun _error(token: Token, message: String) {
+    if (token.type == EOF)
+        report(token.line, "at end ", message)
+    else
+        report(token.line, "at '${token.lexeme}'", message)
 }
 

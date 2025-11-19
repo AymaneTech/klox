@@ -1,5 +1,6 @@
 package com.aymanetech
 
+import com.aymanetech.Lexer.error
 import com.aymanetech.TokenType.*
 
 class Scanner(val source: String) {
@@ -65,7 +66,7 @@ class Scanner(val source: String) {
             else ->
                 when {
                     isDigit(c) -> consumeNumber()
-                    isAlpha(c) -> consumeString()
+                    isAlpha(c) -> consumeIdentifier()
                     else -> error(line, message = "Unexpected character '$c'")
                 }
         }

@@ -1,12 +1,70 @@
 package com.aymanetech
 
 import com.aymanetech.Expr.*
+import com.aymanetech.Stmt.*
 import com.aymanetech.TokenType.*
 
 class Parser(private val tokens: List<Token>) {
     private var current = 0
 
-    private fun expression(): Expr = equality()
+    fun parse(): List<Stmt> {
+        val statements: MutableList<Stmt?> = ArrayList()
+        while (!isAtEnd()) statements.add(declaration())
+
+        return statements.filterNotNull().toList()
+    }
+
+    private fun expression(): Expr = assignment()
+
+    private fun declaration(): Stmt? =
+        try {
+            if (match(VAR)) varDeclaration()
+            else statement()
+        } catch (e: ParserError) {
+            synchronize()
+            null
+        }
+
+    private fun statement(): Stmt {
+        return if (match(PRINT)) printStatement()
+        else expressionStatement()
+    }
+
+    private fun printStatement(): Stmt {
+        val value = expression()
+        // NOTE: I skip consuming semicolon to make my language "moder :Joy"
+        skipSemicolon()
+        return Print(value)
+    }
+
+    private fun varDeclaration(): Stmt {
+        val name = consume(IDENTIFIER, "Expect variable name.")
+        val initializer = if (match(EQUAL)) expression() else null
+        skipSemicolon()
+        return Var(name, initializer)
+    }
+
+    private fun expressionStatement(): Stmt {
+        val expression = expression()
+        skipSemicolon()
+        return Expression(expression)
+    }
+
+    private fun assignment(): Expr {
+        val expr = equality()
+
+        if (match(EQUAL)) {
+            val equals = previous()
+            val value = assignment()
+
+            if (expr is Variable) {
+                val name = expr.name
+                return Assign(name, value)
+            }
+            error(equals, "Invalid assignment expression")
+        }
+        return expr
+    }
 
     private fun equality(): Expr {
         var expr: Expr = comparison()
@@ -68,12 +126,14 @@ class Parser(private val tokens: List<Token>) {
             match(TRUE) -> Literal(true)
             match(NIL) -> Literal(null)
             match(NUMBER, STRING) -> Literal(previous().literal)
+            match(VAR) -> Variable(previous())
             match(LEFT_PAREN) -> {
                 val expr = expression()
                 consume(RIGHT_PAREN, "Expected ')' after expression")
                 Grouping(expr)
             }
-            else -> throw error(peek(), "Unknown expression")
+
+            else -> throw error(peek(), "Expect expression.")
         }
 
     private fun match(vararg types: TokenType): Boolean {
@@ -102,8 +162,21 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun error(token: Token, message: String): ParserError {
-        _error(token, message)
+        Lexer.error(token, message)
         return ParserError()
+    }
+
+    private fun synchronize() {
+        advance()
+        while (!isAtEnd()) {
+            if (previous().type == SEMICOLON) return
+
+            when (peek().type) {
+                CLASS, FUN, FOR, IF, WHILE, PRINT, RETURN -> return
+                else -> {}
+            }
+            advance()
+        }
     }
 
     private fun isAtEnd() = peek().type == EOF
@@ -111,6 +184,10 @@ class Parser(private val tokens: List<Token>) {
     private fun peek() = tokens[current]
 
     private fun previous() = tokens[current - 1]
+
+    private fun skipSemicolon() {
+        match(SEMICOLON)
+    }
 
     class ParserError : RuntimeException()
 }

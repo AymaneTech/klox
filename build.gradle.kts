@@ -7,7 +7,7 @@ group = "com.aymanetech"
 version = "1.0-SNAPSHOT"
 
 application {
-    mainClass.set("com.aymanetech.MainKt")
+    mainClass.set("com.aymanetech.Lexer")
 }
 
 repositories {
@@ -21,6 +21,19 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
 kotlin {
     jvmToolchain(21)
+}
+
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
+}
+
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = "com.aymanetech.Lexer"
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
 }

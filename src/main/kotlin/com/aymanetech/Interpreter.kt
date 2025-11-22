@@ -7,7 +7,7 @@ import com.aymanetech.TokenType.*
 
 class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
-    private val environment: Environment = Environment()
+    private var environment: Environment = Environment()
 
     fun interpret(statements: List<Stmt>) {
         try {
@@ -74,6 +74,10 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
     }
 
+    override fun visit(stmt: Block) {
+        executeBlock(stmt.statements, Environment(environment))
+    }
+
     override fun visit(expr: Unary): Any? {
         val right = evaluate(expr.right)
         return when (expr.operator.type) {
@@ -91,7 +95,17 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
     private fun evaluate(expr: Expr?): Any? = expr?.accept(this)
 
-    private fun execute(stmt: Stmt) = stmt.accept(this)
+    private fun execute(stmt: Stmt): Any = stmt.accept(this)
+
+    private fun executeBlock(statements: List<Stmt>, environment: Environment) {
+        val previous = this.environment
+        try {
+            this.environment = environment
+            statements.forEach(::execute)
+        } finally {
+            this.environment = previous
+        }
+    }
 
     /**
      * As mentioned in the book (crafting interpreters) here we followed the same rule as Ruby false

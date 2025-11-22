@@ -15,6 +15,10 @@ sealed class Stmt : StmtVisitable {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
 
+    data class If(val condition: Expr, val thenBranch: Stmt, val elseBranch: Stmt?) : Stmt() {
+        override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
+    }
+
     data class Print(val expression: Expr) : Stmt() {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
@@ -28,5 +32,6 @@ sealed class Stmt : StmtVisitable {
         fun visit(stmt: Print): T
         fun visit(stmt: Var): T
         fun visit(stmt: Block): T
+        fun visit(stmt: If): T
     }
 }

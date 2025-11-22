@@ -59,8 +59,27 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
     override fun visit(expr: Literal): Any? = expr.value
 
+    override fun visit(expr: Logical): Any? {
+        val left = evaluate(expr.left)
+
+        if(expr.operator.type == OR){
+            if(isTruthy(left)) return left
+        } else {
+            if(!isTruthy(left)) return left
+        }
+        return evaluate(expr.right)
+    }
+
     override fun visit(stmt: Expression) {
         evaluate(stmt.expression)
+    }
+
+    override fun visit(stmt: If) {
+        val (condition, thenBranch, elseBranch) = stmt
+        if(isTruthy(evaluate(condition)))
+            execute(thenBranch)
+        else if(elseBranch != null)
+            execute(elseBranch)
     }
 
     override fun visit(stmt: Print) {

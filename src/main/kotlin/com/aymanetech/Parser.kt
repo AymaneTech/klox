@@ -25,15 +25,28 @@ class Parser(private val tokens: List<Token>) {
             null
         }
 
-    private fun statement(): Stmt {
-        return if (match(PRINT)) printStatement()
-        else if (match(LEFT_BRACE)) block()
-        else expressionStatement()
+    private fun statement(): Stmt =
+        when {
+            match(IF) -> ifStatement()
+            match(PRINT) -> printStatement()
+            match(LEFT_BRACE) -> block()
+            else -> expressionStatement()
+        }
+
+    private fun ifStatement(): Stmt {
+        consume(LEFT_PAREN, "Expect '(' after if")
+        val expression = expression()
+        consume(RIGHT_PAREN, "Expect ')' after if condition")
+
+        val thenBranch = statement()
+        val elseBranch = if (match(ELSE)) statement() else null
+
+        return If(expression, thenBranch, elseBranch)
     }
 
     private fun printStatement(): Stmt {
         val value = expression()
-        // NOTE: I skip consuming semicolon to make my language "moder :Joy"
+        // NOTE: I skip consuming semicolon to make my language "modern :Joy" inspiration -> tsoding
         skipSemicolon()
         return Print(value)
     }
@@ -61,7 +74,7 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun assignment(): Expr {
-        val expr = equality()
+        val expr = or()
 
         if (match(EQUAL)) {
             val equals = previous()
@@ -72,6 +85,28 @@ class Parser(private val tokens: List<Token>) {
                 return Assign(name, value)
             }
             error(equals, "Invalid assignment expression")
+        }
+        return expr
+    }
+
+    private fun or(): Expr {
+        var expr = and()
+
+        while (match(OR)) {
+            val operator = previous()
+            val right = and()
+            expr = Logical(expr, operator, right)
+        }
+        return expr
+    }
+
+    private fun and(): Expr {
+        var expr = equality()
+
+        while (match(AND)) {
+            val operator = previous()
+            val right = equality()
+            expr = Logical(expr, operator, right)
         }
         return expr
     }

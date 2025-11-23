@@ -4,10 +4,41 @@ import com.aymanetech.Expr.*
 import com.aymanetech.Lexer.runtimeError
 import com.aymanetech.Stmt.*
 import com.aymanetech.TokenType.*
+import java.lang.System.currentTimeMillis
 
 class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
-    private var environment: Environment = Environment()
+    private val globals: Environment = Environment()
+    private var environment: Environment = globals
+
+    constructor() {
+        globals.define("clock" to object : LoxCallable {
+            override fun arity() = 0
+            override fun call(interpreter: Interpreter, arguments: List<Any?>?): Any = currentTimeMillis() / 1000.0
+            override fun toString() = "<native fn>"
+        })
+
+        globals.define("print" to object : LoxCallable {
+            override fun arity() = 1
+            override fun call(interpreter: Interpreter, arguments: List<Any?>?): Any = println(arguments?.first())
+            override fun toString() = "<native fn>"
+        })
+
+        globals.define("scan" to object : LoxCallable {
+            override fun arity() = 0
+            override fun call(interpreter: Interpreter, arguments: List<Any?>?): Any = readln()
+            override fun toString() = "<native fn>"
+        })
+
+        globals.define("input" to object : LoxCallable {
+            override fun arity() = 1
+            override fun call(interpreter: Interpreter, arguments: List<Any?>?): Any {
+                println(arguments?.first())
+                return readln()
+            }
+            override fun toString() = "<native fn>"
+        })
+    }
 
     fun interpret(statements: List<Stmt>) {
         try {

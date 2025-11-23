@@ -20,5 +20,8 @@ enum class TokenType {
     FUN, FOR, IF, NIL, OR, PRINT,
     RETURN, SUPER, THIS, VAR, WHILE,
 
+    // TODO: Accept challenge and implement break
+    BREAK,
+
     EOF
 }

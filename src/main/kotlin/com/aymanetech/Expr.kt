@@ -16,6 +16,10 @@ sealed class Expr : ExprVisitable {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
 
+    data class Call(val callee: Expr, val paren: Token, val arguments: List<Expr>?) : Expr() {
+        override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
+    }
+
     data class Grouping(val expression: Expr) : Expr() {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
@@ -44,6 +48,7 @@ sealed class Expr : ExprVisitable {
         fun visit(expr: Unary): T
         fun visit(expr: Variable): T
         fun visit(expr: Logical): T
+        fun visit(expr: Call): T
     }
 }
 

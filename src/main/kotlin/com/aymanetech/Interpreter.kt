@@ -55,6 +55,21 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
         }
     }
 
+    override fun visit(expr: Call): Any? {
+        val callee = evaluate(expr.callee)
+        val arguments = expr.arguments?.map(::evaluate)
+
+        if (callee !is LoxCallable)
+            throw RuntimeError(expr.paren, "Can only call functions and classes.")
+
+        val function = callee
+        if (arguments?.size != function.arity())
+            throw RuntimeError(expr.paren, "Expect ${function.arity()} arguments but got ${arguments?.size}.")
+
+
+        return function.call(this, arguments)
+    }
+
     override fun visit(expr: Grouping): Any? = evaluate(expr.expression)
 
     override fun visit(expr: Literal): Any? = expr.value

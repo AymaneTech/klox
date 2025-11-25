@@ -20,14 +20,7 @@ class Parser(private val tokens: List<Token>) {
     private fun declaration(): Stmt? =
         try {
             when {
-                match(FN) -> {
-                    if (match(IDENTIFIER))
-                        function("function")
-                    else {
-                        current--
-                        statement()
-                    }
-                }
+                match(FUN) -> function("function")
                 match(VAR) -> varDeclaration()
                 else -> statement()
             }
@@ -319,7 +312,7 @@ class Parser(private val tokens: List<Token>) {
             if (previous().type == SEMICOLON) return
 
             when (peek().type) {
-                CLASS, FN, FOR, IF, WHILE, PRINT, RETURN -> return
+                CLASS, FUN, FOR, IF, WHILE, PRINT, RETURN -> return
                 else -> {}
             }
             advance()

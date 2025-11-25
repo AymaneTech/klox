@@ -17,7 +17,7 @@ enum class TokenType {
 
     // keywords
     AND, CLASS, ELSE, FALSE, TRUE,
-    FN, FOR, IF, NIL, OR, PRINT,
+    FUN, FN, FOR, IF, NIL, OR, PRINT,
     RETURN, SUPER, THIS, VAR, WHILE,
 
     // TODO: Accept challenge and implement break

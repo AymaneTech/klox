@@ -233,7 +233,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
     }
 
     private fun stringify(value: Any?): String {
-        if (value == null) return "nil"
+        if (value == null && value is Unit) return "nil"
         if (value is Double) {
             var text = value.toString()
             if (text.endsWith(".0")) {

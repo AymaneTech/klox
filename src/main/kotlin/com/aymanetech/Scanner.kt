@@ -12,7 +12,7 @@ class Scanner(val source: String) {
         "else" to ELSE,
         "false" to FALSE,
         "for" to FOR,
-        "fun" to FUN,
+        "fn" to FN,
         "if" to IF,
         "nil" to NIL,
         "or" to OR,

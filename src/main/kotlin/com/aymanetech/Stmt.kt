@@ -15,11 +15,19 @@ sealed class Stmt : StmtVisitable {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
 
+    data class Function(val name: Token, val params: List<Token>, val body: List<Stmt>) : Stmt() {
+        override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
+    }
+
     data class If(val condition: Expr, val thenBranch: Stmt, val elseBranch: Stmt?) : Stmt() {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
 
     data class Print(val expression: Expr) : Stmt() {
+        override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
+    }
+
+    data class Return(val token: Token, val value: Expr?) : Stmt() {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
 
@@ -37,6 +45,8 @@ sealed class Stmt : StmtVisitable {
         fun visit(stmt: Var): T
         fun visit(stmt: Block): T
         fun visit(stmt: If): T
+        fun visit(stmt: Function): T
         fun visit(stmt: While): T
+        fun visit(stmt: Return): T
     }
 }

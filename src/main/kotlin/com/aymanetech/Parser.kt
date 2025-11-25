@@ -2,6 +2,7 @@ package com.aymanetech
 
 import com.aymanetech.Expr.*
 import com.aymanetech.Stmt.*
+import com.aymanetech.Stmt.Function
 import com.aymanetech.TokenType.*
 
 class Parser(private val tokens: List<Token>) {
@@ -18,8 +19,18 @@ class Parser(private val tokens: List<Token>) {
 
     private fun declaration(): Stmt? =
         try {
-            if (match(VAR)) varDeclaration()
-            else statement()
+            when {
+                match(FN) -> {
+                    if (match(IDENTIFIER))
+                        function("function")
+                    else {
+                        current--
+                        statement()
+                    }
+                }
+                match(VAR) -> varDeclaration()
+                else -> statement()
+            }
         } catch (e: ParserError) {
             synchronize()
             null
@@ -30,6 +41,7 @@ class Parser(private val tokens: List<Token>) {
             match(IF) -> ifStatement()
             match(FOR) -> forStatement()
             match(PRINT) -> printStatement()
+            match(RETURN) -> returnStatement()
             match(WHILE) -> whileStatement()
             match(LEFT_BRACE) -> block()
             else -> expressionStatement()
@@ -42,7 +54,7 @@ class Parser(private val tokens: List<Token>) {
             else if (match(VAR)) varDeclaration()
             else expressionStatement()
 
-        var condition = if (!check(SEMICOLON)) expression() else Literal(true)
+        val condition = if (!check(SEMICOLON)) expression() else Literal(true)
         consume(SEMICOLON, "Expect ';' after loop condition")
 
         val increment = if (!check(RIGHT_PAREN)) expression() else null
@@ -82,6 +94,13 @@ class Parser(private val tokens: List<Token>) {
         return Print(value)
     }
 
+    private fun returnStatement(): Stmt {
+        val keyword = previous()
+        val value = if (!check(SEMICOLON)) expression() else null
+        consume(SEMICOLON, "Expect ';' after return value")
+        return Return(keyword, value)
+    }
+
     private fun varDeclaration(): Stmt {
         val name = consume(IDENTIFIER, "Expect variable name.")
         val initializer = if (match(EQUAL)) expression() else null
@@ -103,10 +122,28 @@ class Parser(private val tokens: List<Token>) {
         return Expression(expression)
     }
 
+    private fun function(kind: String): Stmt {
+        val name = consume(IDENTIFIER, "Expect $kind name.")
+        consume(LEFT_PAREN, "Expect '(' after $kind name")
+        val parameters: List<Token> = getFunctionParams()
+        consume(LEFT_BRACE, "Expect '{' before $kind body")
+        val body = blockStatements()
+        return Function(name, parameters, body)
+    }
+
+    private fun anonymousFunction(): Expr {
+        consume(LEFT_PAREN, "Expect '(' after anonymous function")
+        val parameters: List<Token> = getFunctionParams()
+        consume(LEFT_BRACE, "Expect '{' before function body")
+        val body = blockStatements()
+        return AnonymousFunction(parameters, body)
+    }
+
+
     private fun block(): Stmt = Block(blockStatements())
 
     private fun blockStatements(): List<Stmt> {
-        val statements: MutableList<Stmt> = ArrayList()
+        val statements: MutableList<Stmt> = mutableListOf()
         while (!check(RIGHT_BRACE) && !isAtEnd()) statements.add(declaration()!!)
         consume(RIGHT_BRACE, message = "Expect '}' after statement.")
         return statements;
@@ -220,7 +257,7 @@ class Parser(private val tokens: List<Token>) {
         val arguments = mutableListOf<Expr>()
         if (!check(RIGHT_PAREN))
             do {
-                if(arguments.size >= 255)
+                if (arguments.size >= 255)
                     error(peek(), "Can't have more than 255 arguments.")
                 arguments.add(expression())
             } while (match(COMMA))
@@ -236,6 +273,7 @@ class Parser(private val tokens: List<Token>) {
             match(NIL) -> Literal(null)
             match(NUMBER, STRING) -> Literal(previous().literal)
             match(IDENTIFIER) -> Variable(previous())
+            match(FN) -> anonymousFunction()
             match(LEFT_PAREN) -> {
                 val expr = expression()
                 consume(RIGHT_PAREN, "Expected ')' after expression")
@@ -281,7 +319,7 @@ class Parser(private val tokens: List<Token>) {
             if (previous().type == SEMICOLON) return
 
             when (peek().type) {
-                CLASS, FUN, FOR, IF, WHILE, PRINT, RETURN -> return
+                CLASS, FN, FOR, IF, WHILE, PRINT, RETURN -> return
                 else -> {}
             }
             advance()
@@ -296,6 +334,19 @@ class Parser(private val tokens: List<Token>) {
 
     private fun skipSemicolon() {
         match(SEMICOLON)
+    }
+
+    private fun getFunctionParams(): List<Token> {
+        val parameters: MutableList<Token> = mutableListOf()
+        if (!check(RIGHT_PAREN))
+            do {
+                if (parameters.size >= 255)
+                    error(peek(), "Can't have more than 255 parameters.")
+
+                parameters.add(consume(IDENTIFIER, "Expect parameter name."))
+            } while (match(COMMA))
+        consume(RIGHT_PAREN, "Expect ')' after parameters.")
+        return parameters
     }
 
     class ParserError : RuntimeException()

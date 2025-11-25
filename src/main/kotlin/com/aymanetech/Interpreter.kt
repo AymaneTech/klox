@@ -18,7 +18,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
             override fun toString() = "<native fn>"
         })
 
-        globals.define("print" to object : LoxCallable {
+        globals.define("println" to object : LoxCallable {
             override fun arity() = 1
             override fun call(interpreter: Interpreter, arguments: List<Any?>?): Any = println(arguments?.first())
             override fun toString() = "<native fn>"
@@ -33,9 +33,10 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
         globals.define("input" to object : LoxCallable {
             override fun arity() = 1
             override fun call(interpreter: Interpreter, arguments: List<Any?>?): Any {
-                println(arguments?.first())
+                print(arguments?.first())
                 return readln()
             }
+
             override fun toString() = "<native fn>"
         })
     }
@@ -101,6 +102,9 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
         return function.call(this, arguments)
     }
 
+    override fun visit(expr: AnonymousFunction): Any? =
+        LoxFunction(expr, environment)
+
     override fun visit(expr: Grouping): Any? = evaluate(expr.expression)
 
     override fun visit(expr: Literal): Any? = expr.value
@@ -128,9 +132,19 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
             execute(elseBranch)
     }
 
+    override fun visit(stmt: Stmt.Function) {
+        val function = LoxFunction(stmt, environment)
+        environment.define(stmt.name.lexeme to function)
+    }
+
     override fun visit(stmt: Print) {
         val value = evaluate(stmt.expression)
         println(stringify(value))
+    }
+
+    override fun visit(stmt: Return) {
+        val value = if (stmt.value != null) evaluate(stmt.value) else null
+        throw RuntimeReturn(value)
     }
 
     override fun visit(stmt: Var) {
@@ -163,11 +177,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
     override fun visit(expr: Variable): Any? = environment[expr.name]
 
-    private fun evaluate(expr: Expr?): Any? = expr?.accept(this)
-
-    private fun execute(stmt: Stmt): Any = stmt.accept(this)
-
-    private fun executeBlock(statements: List<Stmt>, environment: Environment) {
+    fun executeBlock(statements: List<Stmt>, environment: Environment) {
         val previous = this.environment
         try {
             this.environment = environment
@@ -176,6 +186,10 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
             this.environment = previous
         }
     }
+
+    private fun evaluate(expr: Expr?): Any? = expr?.accept(this)
+
+    private fun execute(stmt: Stmt): Any = stmt.accept(this)
 
     /**
      * As mentioned in the book (crafting interpreters) here we followed the same rule as Ruby false
@@ -233,3 +247,4 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
 // TODO: I can improve this using kotlin algebratic types feature
 class RuntimeError(val token: Token, message: String) : RuntimeException(message)
+class RuntimeReturn(val value: Any?) : RuntimeException(null, null, false, false)

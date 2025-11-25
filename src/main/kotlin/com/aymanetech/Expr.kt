@@ -40,6 +40,10 @@ sealed class Expr : ExprVisitable {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
 
+    data class AnonymousFunction(val params: List<Token>, val body: List<Stmt>) : Expr() {
+        override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
+    }
+
     interface Visitor<T> {
         fun visit(expr: Assign): T
         fun visit(expr: Binary): T
@@ -49,6 +53,7 @@ sealed class Expr : ExprVisitable {
         fun visit(expr: Variable): T
         fun visit(expr: Logical): T
         fun visit(expr: Call): T
+        fun visit(expr: AnonymousFunction): T
     }
 }
 

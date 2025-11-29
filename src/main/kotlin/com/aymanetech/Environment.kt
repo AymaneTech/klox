@@ -21,6 +21,8 @@ data class Environment(
 
     }
 
+    fun getAt(distance: Int, name: String) = ancestor(distance).values[name]
+
     fun assign(assignment: Pair<Token, Any?>) {
         val (name, value) = assignment
         if (values.containsKey(name.lexeme)){
@@ -34,5 +36,18 @@ data class Environment(
         }
 
         throw RuntimeError(name, "Undefined variable '${name.lexeme}'.")
+    }
+
+    fun assignAt(distance: Int, assigment: Pair<Token, Any?>) {
+        val (name, value) = assigment
+        ancestor(distance).values[name.lexeme] = value
+    }
+
+    private fun ancestor(distance: Int): Environment {
+        var env = this
+        for (i in 0 until distance) {
+            env = env.enclosing!!
+        }
+        return env
     }
 }

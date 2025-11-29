@@ -302,7 +302,7 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun error(token: Token, message: String): ParserError {
-        Lexer.error(token, message)
+        Lox.error(token, message)
         return ParserError()
     }
 

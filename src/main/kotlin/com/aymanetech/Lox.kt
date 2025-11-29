@@ -10,7 +10,7 @@ import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 
-object Lexer {
+object Lox {
     private var hadError = false
     private var hadRuntimeError = false
 
@@ -50,9 +50,13 @@ object Lexer {
 
     fun run(source: String) {
         val tokens = Scanner(source).scanTokens()
-        val stmt = Parser(tokens).parse()
+        val statements = Parser(tokens).parse()
         if (hadError) return
-        interpreter.interpret(stmt)
+
+        Resolver(interpreter).resolve(statements)
+        if (hadError) return
+        
+        interpreter.interpret(statements)
     }
 
     fun error(line: Int, message: String) {

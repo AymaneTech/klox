@@ -1,6 +1,7 @@
 package com.aymanetech
 
 import com.aymanetech.Expr.*
+import com.aymanetech.Expr.Set
 import com.aymanetech.Stmt.*
 import com.aymanetech.Stmt.Function
 import com.aymanetech.TokenType.*
@@ -20,6 +21,7 @@ class Parser(private val tokens: List<Token>) {
     private fun declaration(): Stmt? =
         try {
             when {
+                match(CLASS) -> classDeclaration()
                 match(FUN) -> function("function")
                 match(VAR) -> varDeclaration()
                 else -> statement()
@@ -28,6 +30,18 @@ class Parser(private val tokens: List<Token>) {
             synchronize()
             null
         }
+
+    private fun classDeclaration(): Stmt {
+        val name = consume(IDENTIFIER, "Expect class name")
+        consume(LEFT_BRACE, "Expect '{' before class body")
+
+        val methods = mutableListOf<Stmt.Function>()
+        while (!check(RIGHT_BRACE) && !isAtEnd()) {
+            methods.add(function("method") as Stmt.Function)
+        }
+        consume(RIGHT_BRACE, "Expect '}' after class body")
+        return Class(name, methods)
+    }
 
     private fun statement(): Stmt =
         when {
@@ -152,6 +166,8 @@ class Parser(private val tokens: List<Token>) {
             if (expr is Variable) {
                 val name = expr.name
                 return Assign(name, value)
+            } else if (expr is Get) {
+                return Set(expr.obj, expr.name, value)
             }
             error(equals, "Invalid assignment expression")
         }
@@ -240,7 +256,10 @@ class Parser(private val tokens: List<Token>) {
         while (true) {
             if (match(LEFT_PAREN))
                 expr = finishCall(expr)
-            else
+            else if (match(DOT)) {
+                val name = consume(IDENTIFIER, "Expect property name after '.'")
+                expr = Get(expr, name)
+            } else
                 break
         }
         return expr

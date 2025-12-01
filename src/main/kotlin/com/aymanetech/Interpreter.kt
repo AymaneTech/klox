@@ -53,7 +53,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
     override fun visit(expr: Assign): Any? {
         val value = evaluate(expr.value)
         val distance = locals[expr]
-        if(distance != null){
+        if (distance != null) {
             environment.assignAt(distance, expr.name to value)
         } else {
             globals.assign(expr.name to value)
@@ -108,6 +108,14 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
         return function.call(this, arguments)
     }
 
+    override fun visit(expr: Get): Any? {
+        val obj = evaluate(expr.obj)
+        if (obj !is LoxInstance)
+            throw RuntimeError(expr.name, "Only instances have properties")
+
+        return obj.get(expr.name)
+    }
+
     override fun visit(expr: AnonymousFunction): Any? =
         LoxFunction(expr, environment)
 
@@ -124,6 +132,17 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
             if (!isTruthy(left)) return left
         }
         return evaluate(expr.right)
+    }
+
+    override fun visit(expr: Expr.Set) : Any?{
+        val obj = evaluate(expr.obj)
+
+        if(obj !is LoxInstance)
+            throw RuntimeError(expr.name, "Only instances have fields")
+
+        val value = evaluate(expr.value)
+        obj.set(expr.name, value)
+        return value
     }
 
     override fun visit(stmt: Expression) {
@@ -166,6 +185,12 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
     override fun visit(stmt: Block) {
         executeBlock(stmt.statements, Environment(environment))
+    }
+
+    override fun visit(stmt: Class) {
+        environment.define(stmt.name.lexeme to null)
+        val klass = LoxClass(stmt.name.lexeme)
+        environment.assign(stmt.name to klass)
     }
 
     override fun visit(expr: Unary): Any? {

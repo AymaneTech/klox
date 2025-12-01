@@ -1,20 +1,11 @@
-fun getUsername(){
-    print "Please enter your username: "
-    return scan();
+class User {
+
 }
 
-var sayHey = fn (name) {
-    if(name == "hamza")
-        print "you are not welcome"
-    else 
-        print "hello mr " + name
-}
+var user = User()
 
-fun main() {
-    var username = getUsername()
-    sayHey(username)
-}
+user.name = "aymane el maini"
+user.email = "elmaini@gmail.com"
+user.age = 21
 
-while(true) {
-    main()
-}
+print user.name

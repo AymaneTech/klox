@@ -7,7 +7,7 @@ group = "com.aymanetech"
 version = "1.0-SNAPSHOT"
 
 application {
-    mainClass.set("com.aymanetech.Lexer")
+    mainClass.set("com.aymanetech.Lox")
 }
 
 repositories {
@@ -32,7 +32,7 @@ tasks.named<JavaExec>("run") {
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "com.aymanetech.Lexer"
+        attributes["Main-Class"] = "com.aymanetech.Lox"
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })

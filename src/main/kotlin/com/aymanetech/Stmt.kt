@@ -11,6 +11,10 @@ sealed class Stmt : StmtVisitable {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
 
+    data class Class(val name: Token, val methods: List<Function>): Stmt() {
+        override fun <T> accept(visitor: Visitor<T>) : T = visitor.visit(this)
+    }
+
     data class Expression(val expression: Expr) : Stmt() {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
@@ -48,5 +52,6 @@ sealed class Stmt : StmtVisitable {
         fun visit(stmt: Function): T
         fun visit(stmt: While): T
         fun visit(stmt: Return): T
+        fun visit(stmt: Class): T
     }
 }

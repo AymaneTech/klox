@@ -20,6 +20,10 @@ sealed class Expr : ExprVisitable {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
 
+    data class Get(val obj: Expr, val name: Token): Expr() {
+        override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
+    }
+
     data class Grouping(val expression: Expr) : Expr() {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
@@ -29,6 +33,10 @@ sealed class Expr : ExprVisitable {
     }
 
     data class Logical(val left: Expr, val operator: Token, val right: Expr) : Expr() {
+        override fun <T> accept(visitor: Visitor<T>) = visitor.visit(this)
+    }
+
+    data class Set(val obj: Expr, val name: Token, val value: Expr): Expr() {
         override fun <T> accept(visitor: Visitor<T>) = visitor.visit(this)
     }
 
@@ -54,35 +62,7 @@ sealed class Expr : ExprVisitable {
         fun visit(expr: Logical): T
         fun visit(expr: Call): T
         fun visit(expr: AnonymousFunction): T
+        fun visit(expr: Get): T
+        fun visit(expr: Set): T
     }
 }
-
-//class AstPrinter : Visitor<String> {
-//
-//    fun print(expression: Expr): String = expression.accept(this);
-//
-//    override fun visit(expr: Binary): String = parenthesize(expr.operator.lexeme, expr.left, expr.right)
-//
-//    override fun visit(expr: Grouping): String = parenthesize("group", expr.expression)
-//
-//    override fun visit(expr: Literal): String =
-//        if (expr.value == null) "nil"
-//        else expr.value.toString()
-//
-//    override fun visit(expr: Unary): String = parenthesize(expr.operator.lexeme, expr.right)
-//
-//    override fun visit(expr: Variable): String = expr.accept(this)
-//
-//    override fun visit(expr: Assign): String = expr.value.accept(this)
-//
-//    private fun parenthesize(name: String, vararg expressions: Expr): String =
-//        buildString {
-//            append("(")
-//            append(name)
-//            expressions.forEach {
-//                append(" ")
-//                append(it.accept(this@AstPrinter))
-//            }
-//            append(")")
-//        }
-//}

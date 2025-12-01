@@ -51,6 +51,12 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
         resolve(expr.left)
     }
 
+    override fun visit(expr: Expr.Set) {
+        resolve(expr.value)
+        resolve(expr.obj)
+
+    }
+
     override fun visit(expr: Call) {
         resolve(expr.callee)
         expr.arguments?.forEach(::resolve)
@@ -107,6 +113,15 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
             error(stmt.token, "Can't return from top-level code")
 
         stmt.value?.let { resolve(it) }
+    }
+
+    override fun visit(stmt: Class) {
+        declare(stmt.name)
+        define(stmt.name)
+    }
+
+    override fun visit(expr: Get) {
+        resolve(expr.obj)
     }
 
     fun resolve(statements: List<Stmt>) {

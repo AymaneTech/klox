@@ -2,6 +2,7 @@ package com.aymanetech
 
 import com.aymanetech.Expr.*
 import com.aymanetech.FunctionType.FUNCTION
+import com.aymanetech.FunctionType.METHOD
 import com.aymanetech.FunctionType.NONE
 import com.aymanetech.Lox.error
 import com.aymanetech.Stmt.*
@@ -118,6 +119,9 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
     override fun visit(stmt: Class) {
         declare(stmt.name)
         define(stmt.name)
+        stmt.methods.forEach {
+            resolveFunction(it, METHOD)
+        }
     }
 
     override fun visit(expr: Get) {
@@ -182,6 +186,6 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
 }
 
 enum class FunctionType {
-    NONE, FUNCTION
+    NONE, FUNCTION, METHOD
 }
 

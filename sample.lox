@@ -1,11 +1,23 @@
 class User {
+    
+    hello() {
+        print "hello mr. " + this.name;
+    }
 
+
+    setName(name) {
+        this.name = name;
+    }
+
+    getName() {
+        return this.name;
+    }
+
+    wach() {
+        return this.email;
+    }
 }
 
 var user = User()
 
-user.name = "aymane el maini"
-user.email = "elmaini@gmail.com"
-user.age = 21
-
-print user.name
+print user.wach()

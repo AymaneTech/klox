@@ -2,21 +2,25 @@ package com.aymanetech
 
 class LoxFunction(
     private val declaration: LoxCallableDeclaration,
-    private val closure: Environment
+    private val closure: Environment,
+    private val isInitializer: Boolean
 ) : LoxCallable {
 
-    constructor(declaration: Stmt.Function, closure: Environment)
-            : this(FunctionDecl(declaration), closure)
+    constructor(declaration: Stmt.Function, closure: Environment, isInitializer: Boolean) : this(
+        FunctionDecl(declaration), closure, isInitializer
+    )
 
-    constructor(declaration: Expr.AnonymousFunction, closure: Environment)
-            : this(AnonymousDecl(declaration), closure)
+    constructor(declaration: Expr.AnonymousFunction, closure: Environment, isInitializer: Boolean) : this(
+        AnonymousDecl(declaration), closure, isInitializer
+    )
 
 
     fun bind(instance: LoxInstance): LoxFunction {
         val env = Environment(closure)
         env.define("this" to instance)
-        return LoxFunction(declaration, env)
+        return LoxFunction(declaration, env, isInitializer)
     }
+
 
     override fun arity(): Int = declaration.params.size
 
@@ -26,11 +30,13 @@ class LoxFunction(
     ): Any? {
         val environment = Environment(closure)
         declaration.params.forEachIndexed { index, token -> environment.define(token.lexeme to arguments?.get(index)) }
-        return try {
+        try {
             interpreter.executeBlock(declaration.body, environment)
         } catch (returnValue: RuntimeReturn) {
-            returnValue.value
+            return returnValue.value
         }
+        if (isInitializer) return closure.getAt(0, "this")
+        return null
     }
 
     override fun toString(): String = declaration.name?.let { "<fn ${it}>" } ?: "<fn>"

@@ -117,7 +117,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
     }
 
     override fun visit(expr: AnonymousFunction): Any? =
-        LoxFunction(expr, environment)
+        LoxFunction(expr, environment, false)
 
     override fun visit(expr: Grouping): Any? = evaluate(expr.expression)
 
@@ -160,7 +160,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
     }
 
     override fun visit(stmt: Stmt.Function) {
-        val function = LoxFunction(stmt, environment)
+        val function = LoxFunction(stmt, environment, false)
         environment.define(stmt.name.lexeme to function)
     }
 
@@ -192,7 +192,8 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
     override fun visit(stmt: Class) {
         environment.define(stmt.name.lexeme to null)
         val methods: Map<String, LoxFunction> = stmt.methods.associate {
-            it.name.lexeme to LoxFunction(it, environment)
+            val method = it.name.lexeme
+            method to LoxFunction(it, environment, method == "init")
         }
         val klass = LoxClass(stmt.name.lexeme, methods)
         environment.assign(stmt.name to klass)

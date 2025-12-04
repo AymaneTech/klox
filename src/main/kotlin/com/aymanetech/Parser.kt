@@ -284,6 +284,7 @@ class Parser(private val tokens: List<Token>) {
             match(TRUE) -> Literal(true)
             match(NIL) -> Literal(null)
             match(NUMBER, STRING) -> Literal(previous().literal)
+            match(THIS) -> This(previous())
             match(IDENTIFIER) -> Variable(previous())
             match(FN) -> anonymousFunction()
             match(LEFT_PAREN) -> {

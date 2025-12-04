@@ -1,48 +1,59 @@
 package com.aymanetech
 
-import com.aymanetech.Stmt.Function
-
 class LoxFunction(
-    private val name: String?,
-    private val params: List<Token>,
-    private val body: List<Stmt>,
+    private val declaration: LoxCallableDeclaration,
     private val closure: Environment
 ) : LoxCallable {
 
-    /**
-     * this constructor used with named functions
-     */
-    constructor(declaration: Function, closure: Environment) : this(
-        declaration.name.lexeme,
-        declaration.params,
-        declaration.body,
-        closure
-    )
+    constructor(declaration: Stmt.Function, closure: Environment)
+            : this(FunctionDecl(declaration), closure)
 
-    /**
-     * this constructor used with anonymous functions
-     */
-    constructor(function: Expr.AnonymousFunction, closure: Environment) : this(
-        null,
-        function.params,
-        function.body,
-        closure
-    )
+    constructor(declaration: Expr.AnonymousFunction, closure: Environment)
+            : this(AnonymousDecl(declaration), closure)
 
-    override fun arity(): Int = params.size
+
+    fun bind(instance: LoxInstance): LoxFunction {
+        val env = Environment(closure)
+        env.define("this" to instance)
+        return LoxFunction(declaration, env)
+    }
+
+    override fun arity(): Int = declaration.params.size
 
     override fun call(
         interpreter: Interpreter,
         arguments: List<Any?>?
     ): Any? {
         val environment = Environment(closure)
-        params.forEachIndexed { index, token -> environment.define(token.lexeme to arguments?.get(index)) }
+        declaration.params.forEachIndexed { index, token -> environment.define(token.lexeme to arguments?.get(index)) }
         return try {
-            interpreter.executeBlock(body, environment)
+            interpreter.executeBlock(declaration.body, environment)
         } catch (returnValue: RuntimeReturn) {
             returnValue.value
         }
     }
 
-    override fun toString(): String = name?.let { "<fn ${it}>" } ?: "<fn>"
+    override fun toString(): String = declaration.name?.let { "<fn ${it}>" } ?: "<fn>"
+}
+
+sealed interface LoxCallableDeclaration {
+    val params: List<Token>
+    val body: List<Stmt>
+    val name: String?
+}
+
+data class FunctionDecl(
+    val stmt: Stmt.Function
+) : LoxCallableDeclaration {
+    override val params = stmt.params
+    override val body = stmt.body
+    override val name = stmt.name.lexeme
+}
+
+data class AnonymousDecl(
+    val expr: Expr.AnonymousFunction
+) : LoxCallableDeclaration {
+    override val params = expr.params
+    override val body = expr.body
+    override val name: String? = null
 }

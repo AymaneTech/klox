@@ -20,7 +20,7 @@ sealed class Expr : ExprVisitable {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
 
-    data class Get(val obj: Expr, val name: Token): Expr() {
+    data class Get(val obj: Expr, val name: Token) : Expr() {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
 
@@ -36,7 +36,11 @@ sealed class Expr : ExprVisitable {
         override fun <T> accept(visitor: Visitor<T>) = visitor.visit(this)
     }
 
-    data class Set(val obj: Expr, val name: Token, val value: Expr): Expr() {
+    data class Set(val obj: Expr, val name: Token, val value: Expr) : Expr() {
+        override fun <T> accept(visitor: Visitor<T>) = visitor.visit(this)
+    }
+
+    data class This(val keyword: Token) : Expr() {
         override fun <T> accept(visitor: Visitor<T>) = visitor.visit(this)
     }
 
@@ -48,7 +52,7 @@ sealed class Expr : ExprVisitable {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
 
-    data class AnonymousFunction(val params: List<Token>, val body: List<Stmt>) : Expr() {
+    data class AnonymousFunction(val params: List<Token>, val body: List<Stmt>) : Expr(){
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
 
@@ -64,5 +68,6 @@ sealed class Expr : ExprVisitable {
         fun visit(expr: AnonymousFunction): T
         fun visit(expr: Get): T
         fun visit(expr: Set): T
+        fun visit(expr: This): T
     }
 }

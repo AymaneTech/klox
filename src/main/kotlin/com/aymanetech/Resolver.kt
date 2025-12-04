@@ -1,16 +1,14 @@
 package com.aymanetech
 
 import com.aymanetech.Expr.*
-import com.aymanetech.FunctionType.FUNCTION
-import com.aymanetech.FunctionType.METHOD
-import com.aymanetech.FunctionType.NONE
 import com.aymanetech.Lox.error
 import com.aymanetech.Stmt.*
 import java.util.*
 
 class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
     private val scopes: Stack<MutableMap<String, Boolean>> = Stack()
-    private var currentFunction = NONE
+    private var currentFunction = FunctionType.NONE
+    private var currentClass = ClassType.NONE
 
     override fun visit(stmt: Block) {
         beginScope()
@@ -55,7 +53,14 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
     override fun visit(expr: Expr.Set) {
         resolve(expr.value)
         resolve(expr.obj)
+    }
 
+    override fun visit(expr: This) {
+        if(currentClass == ClassType.NONE){
+            error(expr.keyword, "Can't use 'this' outside of a method")
+            return
+        }
+        resolveLocal(expr, expr.keyword)
     }
 
     override fun visit(expr: Call) {
@@ -65,7 +70,7 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
 
     override fun visit(expr: AnonymousFunction) {
         val enclosingFunction = currentFunction
-        currentFunction = FUNCTION
+        currentFunction = FunctionType.FUNCTION
         beginScope()
         expr.params.forEach {
             declare(it)
@@ -101,7 +106,7 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
     override fun visit(stmt: Stmt.Function) {
         declare(stmt.name)
         define(stmt.name)
-        resolveFunction(stmt, FUNCTION)
+        resolveFunction(stmt, FunctionType.FUNCTION)
     }
 
     override fun visit(stmt: While) {
@@ -110,18 +115,24 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
     }
 
     override fun visit(stmt: Return) {
-        if (currentFunction == NONE)
+        if (currentFunction == FunctionType.NONE)
             error(stmt.token, "Can't return from top-level code")
 
         stmt.value?.let { resolve(it) }
     }
 
     override fun visit(stmt: Class) {
+        val enclosingClass = currentClass
+        currentClass = ClassType.CLASS
         declare(stmt.name)
         define(stmt.name)
+        beginScope()
+        scopes.peek()["this"] = true
         stmt.methods.forEach {
-            resolveFunction(it, METHOD)
+            resolveFunction(it, FunctionType.METHOD)
         }
+        endScope()
+        currentClass= enclosingClass
     }
 
     override fun visit(expr: Get) {
@@ -183,9 +194,14 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
             }
         }
     }
+
+    enum class FunctionType {
+        NONE, FUNCTION, METHOD
+    }
+
+    enum class ClassType {
+        NONE, CLASS
+    }
 }
 
-enum class FunctionType {
-    NONE, FUNCTION, METHOD
-}
 

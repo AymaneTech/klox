@@ -134,16 +134,18 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
         return evaluate(expr.right)
     }
 
-    override fun visit(expr: Expr.Set) : Any?{
+    override fun visit(expr: Expr.Set): Any? {
         val obj = evaluate(expr.obj)
 
-        if(obj !is LoxInstance)
+        if (obj !is LoxInstance)
             throw RuntimeError(expr.name, "Only instances have fields")
 
         val value = evaluate(expr.value)
         obj.set(expr.name, value)
         return value
     }
+
+    override fun visit(expr: This): Any? = lookUpVariable(expr.keyword, expr)
 
     override fun visit(stmt: Expression) {
         evaluate(stmt.expression)

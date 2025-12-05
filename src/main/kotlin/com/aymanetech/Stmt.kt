@@ -1,5 +1,6 @@
 package com.aymanetech
 
+import com.aymanetech.Expr.*
 import com.aymanetech.Stmt.Visitor
 
 interface StmtVisitable {
@@ -11,7 +12,7 @@ sealed class Stmt : StmtVisitable {
         override fun <T> accept(visitor: Visitor<T>): T = visitor.visit(this)
     }
 
-    data class Class(val name: Token, val methods: List<Function>, val staticMethods: List<Function>): Stmt() {
+    data class Class(val name: Token, val superClass: Variable?, val methods: List<Function>, val staticMethods: List<Function>): Stmt() {
         override fun <T> accept(visitor: Visitor<T>) : T = visitor.visit(this)
     }
 

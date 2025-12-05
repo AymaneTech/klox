@@ -48,6 +48,7 @@ class Scanner(val source: String) {
             '{' -> addToken(LEFT_BRACE)
             '}' -> addToken(RIGHT_BRACE)
             ',' -> addToken(COMMA)
+            ':' -> addToken(COLON)
             '.' -> addToken(DOT)
             '-' -> addToken(MINUS)
             '+' -> addToken(PLUS)

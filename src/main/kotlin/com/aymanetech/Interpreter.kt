@@ -190,6 +190,13 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
     }
 
     override fun visit(stmt: Class) {
+        var superClass: Any? = null
+        if (stmt.superClass != null) {
+            superClass = evaluate(stmt.superClass)
+            if (superClass !is LoxClass)
+                throw RuntimeError(stmt.superClass.name, "Super class must be a class")
+        }
+
         environment.define(stmt.name.lexeme to null)
         val methods: Map<String, LoxFunction> = stmt.methods.associate {
             val method = it.name.lexeme
@@ -200,7 +207,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
             val method = it.name.lexeme
             method to LoxFunction(it, environment, false)
         }
-        val klass = LoxClass(stmt.name.lexeme, methods, staticMethods)
+        val klass = LoxClass(stmt.name.lexeme, superClass as LoxClass?, methods, staticMethods)
         environment.assign(stmt.name to klass)
     }
 

@@ -2,6 +2,7 @@ package com.aymanetech
 
 class LoxClass(
     private val name: String,
+    private val superClass: LoxClass?,
     private val methods: Map<String, LoxFunction>,
     private val staticMethods: Map<String, LoxFunction>
 ) : LoxCallable{
@@ -23,7 +24,9 @@ class LoxClass(
         return instance
     }
 
-    fun findMethod(name: String): LoxFunction? = methods[name]
+    fun findMethod(name: String): LoxFunction? {
+        return methods[name] ?: superClass?.findMethod(name)
+    }
 
     fun get(token: Token): Any? {
         val method = findStaticMethod(token.lexeme)

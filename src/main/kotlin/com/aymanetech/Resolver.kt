@@ -129,6 +129,12 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
         currentClass = ClassType.CLASS
         declare(stmt.name)
         define(stmt.name)
+        if(stmt.superClass != null && stmt.name.lexeme.equals(stmt.superClass.name.lexeme))
+            error(stmt.superClass.name, "A class can't inherit from itself")
+
+        if (stmt.superClass != null)
+            resolve(stmt.superClass)
+
         beginScope()
         scopes.peek()["this"] = true
         stmt.methods.forEach {

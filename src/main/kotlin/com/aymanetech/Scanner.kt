@@ -23,9 +23,9 @@ class Scanner(val source: String) {
         "this" to THIS,
         "true" to TRUE,
         "var" to VAR,
-        "while" to WHILE
+        "while" to WHILE,
+        "static" to STATIC
     )
-
 
     private var start: Int = 0
     private var current: Int = 0

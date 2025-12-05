@@ -36,11 +36,16 @@ class Parser(private val tokens: List<Token>) {
         consume(LEFT_BRACE, "Expect '{' before class body")
 
         val methods = mutableListOf<Stmt.Function>()
+        val staticMethods = mutableListOf<Stmt.Function>()
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
-            methods.add(function("method") as Stmt.Function)
+            if (match(STATIC)) {
+                staticMethods.add(function("static method") as Stmt.Function)
+            } else {
+                methods.add(function("method") as Stmt.Function)
+            }
         }
         consume(RIGHT_BRACE, "Expect '}' after class body")
-        return Class(name, methods)
+        return Class(name, methods, staticMethods)
     }
 
     private fun statement(): Stmt =

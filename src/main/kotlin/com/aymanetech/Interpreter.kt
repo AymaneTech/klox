@@ -104,16 +104,16 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
         if (arguments?.size != function.arity())
             throw RuntimeError(expr.paren, "Expect ${function.arity()} arguments but got ${arguments?.size}.")
 
-
         return function.call(this, arguments)
     }
 
     override fun visit(expr: Get): Any? {
         val obj = evaluate(expr.obj)
-        if (obj !is LoxInstance)
-            throw RuntimeError(expr.name, "Only instances have properties")
-
-        return obj.get(expr.name)
+        return when (obj) {
+            is LoxInstance -> obj.get(expr.name)
+            is LoxClass -> obj.get(expr.name)
+            else -> throw RuntimeError(expr.name, "Only instances have properties")
+        }
     }
 
     override fun visit(expr: AnonymousFunction): Any? =
@@ -195,7 +195,12 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
             val method = it.name.lexeme
             method to LoxFunction(it, environment, method == "init")
         }
-        val klass = LoxClass(stmt.name.lexeme, methods)
+
+        val staticMethods: Map<String, LoxFunction> = stmt.staticMethods.associate {
+            val method = it.name.lexeme
+            method to LoxFunction(it, environment, false)
+        }
+        val klass = LoxClass(stmt.name.lexeme, methods, staticMethods)
         environment.assign(stmt.name to klass)
     }
 

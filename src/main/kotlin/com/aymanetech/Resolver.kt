@@ -56,7 +56,7 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
     }
 
     override fun visit(expr: This) {
-        if(currentClass == ClassType.NONE){
+        if (currentClass == ClassType.NONE) {
             error(expr.keyword, "Can't use 'this' outside of a method")
             return
         }
@@ -118,6 +118,9 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
         if (currentFunction == FunctionType.NONE)
             error(stmt.token, "Can't return from top-level code")
 
+        if (stmt.value != null && currentFunction == FunctionType.INITIALIZER)
+            error(stmt.token, "Can't return from a constructor")
+
         stmt.value?.let { resolve(it) }
     }
 
@@ -129,10 +132,11 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
         beginScope()
         scopes.peek()["this"] = true
         stmt.methods.forEach {
-            resolveFunction(it, FunctionType.METHOD)
+            val declaration = if (it.name.lexeme != "init") FunctionType.METHOD else FunctionType.INITIALIZER
+            resolveFunction(it, declaration)
         }
         endScope()
-        currentClass= enclosingClass
+        currentClass = enclosingClass
     }
 
     override fun visit(expr: Get) {
@@ -196,7 +200,7 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
     }
 
     enum class FunctionType {
-        NONE, FUNCTION, METHOD
+        NONE, FUNCTION, METHOD, INITIALIZER
     }
 
     enum class ClassType {

@@ -1,10 +1,14 @@
+import sun.jvmstat.monitor.MonitoredVmUtil.mainClass
+
 plugins {
     kotlin("jvm") version "2.2.20"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("org.graalvm.buildtools.native") version "0.10.1"
     application
 }
 
 group = "com.aymanetech"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 
 application {
     mainClass.set("com.aymanetech.Lox")
@@ -12,14 +16,6 @@ application {
 
 repositories {
     mavenCentral()
-}
-
-dependencies {
-    testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
 }
 
 kotlin {
@@ -30,10 +26,23 @@ tasks.named<JavaExec>("run") {
     standardInput = System.`in`
 }
 
-tasks.jar {
-    manifest {
-        attributes["Main-Class"] = "com.aymanetech.Lox"
+tasks {
+    shadowJar {
+        archiveFileName.set("klox.jar")
+        archiveClassifier.set("")
     }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+}
+
+tasks.build {
+    dependsOn("shadowJar")
+}
+
+graalvmNative {
+    binaries {
+        main {
+            imageName.set("klox")
+            mainClass.set("com.aymanetech.Lox")
+            buildArgs.add("-H:+RemoveUnusedSymbols")
+        }
+    }
 }

@@ -1,0 +1,108 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: "21"
+          components: "native-image"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build native executable
+        run: ./gradlew nativeCompile
+
+      - name: Create release directory
+        run: |
+          mkdir -p klox-linux
+          cp build/native/nativeCompile/klox klox-linux/
+          cp README.md QUICKSTART.md FEATURES.md CUSTOM_FEATURES.md klox-linux/
+          chmod +x klox-linux/klox
+
+      - name: Create archive
+        run: tar -czf klox-linux-x64.tar.gz klox-linux/
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: klox-linux-x64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: "21"
+          components: "native-image"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build native executable
+        run: ./gradlew nativeCompile
+
+      - name: Create release directory
+        run: |
+          mkdir -p klox-macos
+          cp build/native/nativeCompile/klox klox-macos/
+          cp README.md QUICKSTART.md FEATURES.md CUSTOM_FEATURES.md klox-macos/
+          chmod +x klox-macos/klox
+
+      - name: Create archive
+        run: tar -czf klox-macos-arm64.tar.gz klox-macos/
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: klox-macos-arm64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: "21"
+          components: "native-image"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build native executable
+        run: .\gradlew.bat nativeCompile
+
+      - name: Create release directory
+        run: |
+          mkdir klox-windows
+          copy build\native\nativeCompile\klox.exe klox-windows\
+          copy README.md klox-windows\
+          copy QUICKSTART.md klox-windows\
+          copy FEATURES.md klox-windows\
+          copy CUSTOM_FEATURES.md klox-windows\
+
+      - name: Create archive
+        run: |
+          cd klox-windows
+          tar -czf ..\klox-windows-x64.tar.gz *
+          cd ..
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: klox-windows-x64.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

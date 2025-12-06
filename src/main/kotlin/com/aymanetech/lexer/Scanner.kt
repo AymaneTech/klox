@@ -1,9 +1,9 @@
 package com.aymanetech.lexer
 
-import com.aymanetech.Lox.error
+import com.aymanetech.runtime.errors.ErrorHandler
 import com.aymanetech.lexer.TokenType.*
 
-class Scanner(val source: String) {
+class Scanner(val source: String, private val errorHandler: ErrorHandler) {
     private val tokens: MutableList<Token> = mutableListOf()
     private val chars: CharArray = source.toCharArray()
     private val keywords: Map<String, TokenType> = mapOf(
@@ -69,7 +69,7 @@ class Scanner(val source: String) {
                 when {
                     isDigit(c) -> consumeNumber()
                     isAlpha(c) -> consumeIdentifier()
-                    else -> error(line, message = "Unexpected character '$c'")
+                    else -> errorHandler.reportError(line, "Unexpected character '$c'")
                 }
         }
     }
@@ -83,7 +83,7 @@ class Scanner(val source: String) {
     private fun advance(): Char = chars[current++]
 
     private fun peek() =
-        if (isAtEnd()) '\u0000' // todo: check that this is equivalent to \0
+        if (isAtEnd()) '\u0000'
         else chars[current]
 
     private fun peekNext() =
@@ -97,7 +97,7 @@ class Scanner(val source: String) {
         }
 
         if (isAtEnd()) {
-            error(line, "unterminated string.")
+            errorHandler.reportError(line, "Unterminated string.")
             return
         }
 

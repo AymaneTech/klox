@@ -1,14 +1,17 @@
 package com.aymanetech.resolver
 
 import com.aymanetech.interpreter.Interpreter
-import com.aymanetech.Lox
+import com.aymanetech.runtime.errors.ErrorHandler
 import com.aymanetech.ast.Expr
 import com.aymanetech.ast.Stmt
 import com.aymanetech.lexer.Token
 import java.util.Stack
 import kotlin.collections.forEach
 
-class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
+class Resolver(
+    private val interpreter: Interpreter,
+    private val errorHandler: ErrorHandler
+) : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
     private val scopes: Stack<MutableMap<String, Boolean>> = Stack()
     private var currentFunction = FunctionType.NONE
     private var currentClass = ClassType.NONE
@@ -43,7 +46,7 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
 
     override fun visit(expr: Expr.Variable) {
         if (scopes.isNotEmpty() && scopes.peek()[expr.name.lexeme] == false)
-            Lox.error(expr.name, "Can't read local variable in it's own initializer")
+            errorHandler.reportError(expr.name, "Can't read local variable in it's own initializer")
 
         resolveLocal(expr, expr.name)
     }
@@ -60,16 +63,16 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
 
     override fun visit(expr: Expr.Super) {
         if(currentClass == ClassType.NONE)
-            Lox.error(expr.keyword, "Can't use 'super' outside of a class.")
+            errorHandler.reportError(expr.keyword, "Can't use 'super' outside of a class.")
         else if (currentClass != ClassType.SUBCLASS)
-            Lox.error(expr.keyword, "Can't use 'super' in a class without a superclass.")
+            errorHandler.reportError(expr.keyword, "Can't use 'super' in a class without a superclass.")
 
         resolveLocal(expr, expr.keyword)
     }
 
     override fun visit(expr: Expr.This) {
         if (currentClass == ClassType.NONE) {
-            Lox.error(expr.keyword, "Can't use 'this' outside of a method")
+            errorHandler.reportError(expr.keyword, "Can't use 'this' outside of a method")
             return
         }
         resolveLocal(expr, expr.keyword)
@@ -128,10 +131,10 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
 
     override fun visit(stmt: Stmt.Return) {
         if (currentFunction == FunctionType.NONE)
-            Lox.error(stmt.token, "Can't return from top-level code")
+            errorHandler.reportError(stmt.token, "Can't return from top-level code")
 
         if (stmt.value != null && currentFunction == FunctionType.INITIALIZER)
-            Lox.error(stmt.token, "Can't return from a constructor")
+            errorHandler.reportError(stmt.token, "Can't return from a constructor")
 
         stmt.value?.let { resolve(it) }
     }
@@ -142,7 +145,7 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
         declare(stmt.name)
         define(stmt.name)
         if(stmt.superClass != null && stmt.name.lexeme.equals(stmt.superClass.name.lexeme))
-            Lox.error(stmt.superClass.name, "A class can't inherit from itself")
+            errorHandler.reportError(stmt.superClass.name, "A class can't inherit from itself")
 
         if (stmt.superClass != null){
             currentClass = ClassType.SUBCLASS
@@ -206,7 +209,7 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
         if (scopes.isEmpty()) return
         val scope = scopes.peek()
         if (scope.containsKey(name.lexeme))
-            Lox.error(name, "Already variable with this name in this scope")
+            errorHandler.reportError(name, "Already variable with this name in this scope")
         scope[name.lexeme] = false
 
     }

@@ -16,6 +16,10 @@ repositories {
     mavenCentral()
 }
 
+dependencies {
+    implementation("com.github.ajalt.mordant:mordant:2.7.2")
+}
+
 kotlin {
     jvmToolchain(21)
 }

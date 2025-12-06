@@ -1,12 +1,12 @@
 package com.aymanetech.parser
 
-import com.aymanetech.Lox
+import com.aymanetech.runtime.errors.ErrorHandler
 import com.aymanetech.ast.Expr
 import com.aymanetech.ast.Stmt
 import com.aymanetech.lexer.Token
 import com.aymanetech.lexer.TokenType
 
-class Parser(private val tokens: List<Token>) {
+class Parser(private val tokens: List<Token>, private val errorHandler: ErrorHandler) {
     private var current = 0
 
     fun parse(): List<Stmt> {
@@ -339,7 +339,7 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun error(token: Token, message: String): ParserError {
-        Lox.error(token, message)
+        errorHandler.reportError(token, message)
         return ParserError()
     }
 

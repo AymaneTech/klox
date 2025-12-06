@@ -1,6 +1,6 @@
 package com.aymanetech.interpreter
 
-import com.aymanetech.Lox.runtimeError
+import com.aymanetech.runtime.errors.ErrorHandler
 import com.aymanetech.ast.Expr
 import com.aymanetech.ast.Expr.*
 import com.aymanetech.ast.Stmt
@@ -26,11 +26,11 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
         }
     }
 
-    fun interpret(statements: List<Stmt>) {
+    fun interpret(statements: List<Stmt>, errorHandler: ErrorHandler) {
         try {
             statements.forEach(::execute)
         } catch (error: RuntimeError) {
-            runtimeError(error)
+            errorHandler.reportRuntimeError(error)
         }
     }
 

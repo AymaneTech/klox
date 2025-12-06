@@ -1,9 +1,15 @@
 package com.aymanetech
 
-import com.aymanetech.TokenType.EOF
+import com.aymanetech.interpreter.Interpreter
+import com.aymanetech.runtime.errors.ErrorHandler
+import com.aymanetech.lexer.Scanner
+import com.aymanetech.parser.Parser
+import com.aymanetech.resolver.Resolver
+import com.github.ajalt.mordant.rendering.TextColors.*
+import com.github.ajalt.mordant.rendering.TextStyles.*
+import com.github.ajalt.mordant.terminal.Terminal
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.lang.System.err
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -11,10 +17,9 @@ import kotlin.system.exitProcess
 
 
 object Lox {
-    private var hadError = false
-    private var hadRuntimeError = false
-
     private val interpreter = Interpreter()
+    private val errorHandler = ErrorHandler()
+    private val terminal = Terminal()
 
     @JvmStatic
     fun main(args: Array<String>) {
@@ -31,57 +36,44 @@ object Lox {
     fun runFile(path: String) {
         val bytes = Files.readAllBytes(Paths.get(path))
         val source = String(bytes, Charset.defaultCharset())
+        errorHandler.setSource(source, path)
         run(source)
-        if (hadError) exitProcess(65)
-        if (hadRuntimeError) exitProcess(70)
+        if (errorHandler.hadError) exitProcess(65)
+        if (errorHandler.hadRuntimeError) exitProcess(70)
     }
 
     fun runPrompt() {
         val input = InputStreamReader(System.`in`)
         val reader = BufferedReader(input)
 
+        terminal.println(cyan(bold("\n╔════════════════════════════════════════╗")))
+        terminal.println(cyan(bold("║")) + "   " + magenta(bold("Welcome to KLox REPL")) + "           " + cyan(bold("║")))
+        terminal.println(cyan(bold("║")) + "   " + dim("Type 'exit' or Ctrl+D to quit") + "   " + cyan(bold("║")))
+        terminal.println(cyan(bold("╚════════════════════════════════════════╝\n")))
+
         while (true) {
-            print(">>  ")
+            terminal.print(green(bold("klox> ")))
             val line: String = reader.readLine() ?: break
+
+            if (line.trim() == "exit") break
+            if (line.trim().isEmpty()) continue
+
+            errorHandler.setSource(line, "repl")
             run(line)
-            hadError = false
+            errorHandler.reset()
         }
+
+        terminal.println(cyan("\n👋 Goodbye!"))
     }
 
     fun run(source: String) {
-        val tokens = Scanner(source).scanTokens()
-        val statements = Parser(tokens).parse()
-        if (hadError) return
+        val tokens = Scanner(source, errorHandler).scanTokens()
+        val statements = Parser(tokens, errorHandler).parse()
+        if (errorHandler.hadError) return
 
-        Resolver(interpreter).resolve(statements)
-        if (hadError) return
-        
-        interpreter.interpret(statements)
-    }
+        Resolver(interpreter, errorHandler).resolve(statements)
+        if (errorHandler.hadError) return
 
-    fun error(line: Int, message: String) {
-        report(line, "", message)
-        hadError = true
-    }
-
-    fun report(line: Int, where: String, message: String) {
-        err.println("[line $line] Error $where: $message")
-    }
-
-    fun error(token: Token, message: String) {
-        if (token.type == EOF)
-            report(token.line, "at end ", message)
-        else
-            report(token.line, "at '${token.lexeme}'", message)
-    }
-
-    fun runtimeError(error: RuntimeError) {
-        err.println(
-            """
-            ${error.message}
-            [line ${error.token.line}]
-        """.trimIndent()
-        )
-        hadRuntimeError = true
+        interpreter.interpret(statements, errorHandler)
     }
 }

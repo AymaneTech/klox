@@ -8,13 +8,13 @@ class Animal {
   }
 }
 
-class Dog > Animal {
+class Dog : Animal {
   speak() {
     println(this.name + " barks");
   }
 }
 
-class Cat > Animal {
+class Cat : Animal {
   speak() {
     println(this.name + " meows");
   }

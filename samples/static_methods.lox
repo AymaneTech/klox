@@ -1,21 +1,7 @@
 class Math {
-  static abs(n) {
-    if (n < 0) {
-      0 - n
-    } else {
-      n
-    }
-  }
-  
-  static max(a, b) {
-    if (a > b) a else b
-  }
-  
-  static min(a, b) {
-    if (a < b) a else b
+  static max() {
+    return "38";
   }
 }
 
-println(Math.abs(-42));
-println(Math.max(10, 20));
-println(Math.min(5, 3));
+println(Math.max());

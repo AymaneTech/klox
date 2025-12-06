@@ -5,9 +5,9 @@ class User {
   }
   
   static create() {
-    var name = input("Enter name: ");
-    var email = input("Enter email: ");
-    User(name, email)
+    var userName = input("Enter name: ");
+    var userEmail = input("Enter email: ");
+    return User(userName, userEmail);
   }
   
   display() {

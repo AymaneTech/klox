@@ -8,7 +8,7 @@ class Vehicle {
   }
 }
 
-class Car > Vehicle {
+class Car : Vehicle {
   init(brand, model) {
     super.init(brand);
     this.model = model;

@@ -1,5 +1,5 @@
 fun add(a, b) {
-  a + b
+  return a + b;
 }
 
 println(add(5, 3));
@@ -8,7 +8,7 @@ fun makeCounter() {
   var count = 0;
   return fn(step) {
     count = count + step;
-    count
+    return count;
   };
 }
 

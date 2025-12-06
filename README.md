@@ -82,16 +82,41 @@ Or use the REPL for interactive mode.
 
 ## Project Structure
 
-- `Interpreter.kt`: Core execution engine with expression and statement visitors
-- `Expr.kt`: AST node definitions for expressions
-- `Stmt.kt`: AST node definitions for statements
-- `Scanner.kt`: Lexical analysis
-- `Parser.kt`: Syntax analysis and AST building
-- `Resolver.kt`: Static scope analysis
-- `Environment.kt`: Scope and variable storage
-- `LoxCallable.kt`: Interface for callable objects
-- `LoxClass.kt`, `LoxInstance.kt`: Object-oriented features
-- `Token.kt`: Token representation
+```
+src/main/kotlin/com/aymanetech/
+├── Lox.kt                      # Main entry point and REPL
+│
+├── lexer/                      # Lexical analysis
+│   ├── Scanner.kt
+│   ├── Token.kt
+│   └── TokenType.kt
+│
+├── parser/                     # Syntax analysis
+│   └── Parser.kt
+│
+├── ast/                        # Abstract Syntax Tree
+│   ├── Expr.kt
+│   └── Stmt.kt
+│
+├── resolver/                   # Semantic analysis
+│   └── Resolver.kt
+│
+├── interpreter/                # Runtime execution
+│   ├── Interpreter.kt
+│   ├── Environment.kt
+│   └── NativeFunctions.kt
+│
+└── runtime/                    # Runtime types and errors
+    ├── LoxCallable.kt
+    ├── LoxClass.kt
+    ├── LoxFunction.kt
+    ├── LoxInstance.kt
+    └── errors/
+        ├── ErrorHandler.kt
+        ├── DiagnosticReporter.kt
+        ├── RuntimeError.kt
+        └── RuntimeReturn.kt
+```
 
 ## References
 

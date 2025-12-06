@@ -1,5 +1,3 @@
-import sun.jvmstat.monitor.MonitoredVmUtil.mainClass
-
 plugins {
     kotlin("jvm") version "2.2.20"
     id("com.github.johnrengelman.shadow") version "8.1.1"
@@ -39,10 +37,8 @@ tasks.build {
 
 graalvmNative {
     binaries {
-        main {
+        named("main") {
             imageName.set("klox")
-            mainClass.set("com.aymanetech.Lox")
-            buildArgs.add("-H:+RemoveUnusedSymbols")
         }
     }
 }

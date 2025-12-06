@@ -25,7 +25,7 @@ jobs:
         run: |
           mkdir -p klox-linux
           cp build/native/nativeCompile/klox klox-linux/
-          cp README.md QUICKSTART.md FEATURES.md CUSTOM_FEATURES.md klox-linux/
+          cp README.md klox-linux/
           chmod +x klox-linux/klox
 
       - name: Create archive
@@ -57,7 +57,7 @@ jobs:
         run: |
           mkdir -p klox-macos
           cp build/native/nativeCompile/klox klox-macos/
-          cp README.md QUICKSTART.md FEATURES.md CUSTOM_FEATURES.md klox-macos/
+          cp README.md klox-macos/
           chmod +x klox-macos/klox
 
       - name: Create archive
@@ -90,9 +90,6 @@ jobs:
           mkdir klox-windows
           copy build\native\nativeCompile\klox.exe klox-windows\
           copy README.md klox-windows\
-          copy QUICKSTART.md klox-windows\
-          copy FEATURES.md klox-windows\
-          copy CUSTOM_FEATURES.md klox-windows\
 
       - name: Create archive
         run: |

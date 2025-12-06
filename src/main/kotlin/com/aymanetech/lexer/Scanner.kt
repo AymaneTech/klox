@@ -1,7 +1,7 @@
-package com.aymanetech
+package com.aymanetech.lexer
 
 import com.aymanetech.Lox.error
-import com.aymanetech.TokenType.*
+import com.aymanetech.lexer.TokenType.*
 
 class Scanner(val source: String) {
     private val tokens: MutableList<Token> = mutableListOf()

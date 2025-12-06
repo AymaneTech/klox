@@ -1,10 +1,10 @@
-package com.aymanetech
+package com.aymanetech.ast
 
-import com.aymanetech.Expr.*
-import com.aymanetech.Stmt.Visitor
+import com.aymanetech.ast.Expr.*
+import com.aymanetech.lexer.Token
 
 interface StmtVisitable {
-    fun <T> accept(visitor: Visitor<T>): T
+    fun <T> accept(visitor: Stmt.Visitor<T>): T
 }
 
 sealed class Stmt : StmtVisitable {

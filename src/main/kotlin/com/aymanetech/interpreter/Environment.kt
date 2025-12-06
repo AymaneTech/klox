@@ -1,4 +1,7 @@
-package com.aymanetech
+package com.aymanetech.interpreter
+
+import com.aymanetech.lexer.Token
+import com.aymanetech.runtime.errors.RuntimeError
 
 data class Environment(
     val enclosing: Environment? = null,
@@ -38,8 +41,8 @@ data class Environment(
         throw RuntimeError(name, "Undefined variable '${name.lexeme}'.")
     }
 
-    fun assignAt(distance: Int, assigment: Pair<Token, Any?>) {
-        val (name, value) = assigment
+    fun assignAt(distance: Int, assignment: Pair<Token, Any?>) {
+        val (name, value) = assignment
         ancestor(distance).values[name.lexeme] = value
     }
 

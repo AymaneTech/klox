@@ -1,4 +1,4 @@
-package com.aymanetech
+package com.aymanetech.lexer
 
 enum class TokenType {
 

@@ -1,4 +1,8 @@
-package com.aymanetech
+package com.aymanetech.runtime
+
+import com.aymanetech.interpreter.Interpreter
+import com.aymanetech.runtime.errors.RuntimeError
+import com.aymanetech.lexer.Token
 
 class LoxClass(
     private val name: String,

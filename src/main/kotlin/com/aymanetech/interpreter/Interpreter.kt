@@ -1,10 +1,18 @@
-package com.aymanetech
+package com.aymanetech.interpreter
 
-import com.aymanetech.Expr.*
 import com.aymanetech.Lox.runtimeError
-import com.aymanetech.Stmt.*
-import com.aymanetech.TokenType.*
-import java.lang.System.currentTimeMillis
+import com.aymanetech.ast.Expr
+import com.aymanetech.ast.Expr.*
+import com.aymanetech.ast.Stmt
+import com.aymanetech.ast.Stmt.*
+import com.aymanetech.lexer.Token
+import com.aymanetech.lexer.TokenType.*
+import com.aymanetech.runtime.LoxCallable
+import com.aymanetech.runtime.LoxClass
+import com.aymanetech.runtime.LoxFunction
+import com.aymanetech.runtime.LoxInstance
+import com.aymanetech.runtime.errors.RuntimeError
+import com.aymanetech.runtime.errors.RuntimeReturn
 
 class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
 
@@ -12,34 +20,10 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
     private var environment: Environment = globals
     private val locals: MutableMap<Expr, Int> = mutableMapOf()
 
-    constructor() {
-        globals.define("clock" to object : LoxCallable {
-            override fun arity() = 0
-            override fun call(interpreter: Interpreter, arguments: List<Any?>?): Any = currentTimeMillis() / 1000.0
-            override fun toString() = "<native fn>"
-        })
-
-        globals.define("println" to object : LoxCallable {
-            override fun arity() = 1
-            override fun call(interpreter: Interpreter, arguments: List<Any?>?): Any = println(arguments?.first())
-            override fun toString() = "<native fn>"
-        })
-
-        globals.define("scan" to object : LoxCallable {
-            override fun arity() = 0
-            override fun call(interpreter: Interpreter, arguments: List<Any?>?): Any = readln()
-            override fun toString() = "<native fn>"
-        })
-
-        globals.define("input" to object : LoxCallable {
-            override fun arity() = 1
-            override fun call(interpreter: Interpreter, arguments: List<Any?>?): Any {
-                print(arguments?.first())
-                return readln()
-            }
-
-            override fun toString() = "<native fn>"
-        })
+    init {
+        NativeFunctions.getAllNativeFunctions().forEach { (name, function) ->
+            globals.define(name to function)
+        }
     }
 
     fun interpret(statements: List<Stmt>) {
@@ -313,7 +297,7 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
     }
 
     private fun stringify(value: Any?): String {
-        if (value == null && value is Unit) return "nil"
+        if (value == null) return "nil"
         if (value is Double) {
             var text = value.toString()
             if (text.endsWith(".0")) {
@@ -325,6 +309,3 @@ class Interpreter : Expr.Visitor<Any?>, Stmt.Visitor<Unit> {
     }
 }
 
-// TODO: I can improve this using kotlin algebratic types feature
-class RuntimeError(val token: Token, message: String) : RuntimeException(message)
-class RuntimeReturn(val value: Any?) : RuntimeException(null, null, false, false)

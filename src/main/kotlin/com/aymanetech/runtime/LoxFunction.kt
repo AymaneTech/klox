@@ -1,4 +1,11 @@
-package com.aymanetech
+package com.aymanetech.runtime
+
+import com.aymanetech.ast.Expr
+import com.aymanetech.ast.Stmt
+import com.aymanetech.interpreter.Environment
+import com.aymanetech.interpreter.Interpreter
+import com.aymanetech.runtime.errors.RuntimeReturn
+import com.aymanetech.lexer.Token
 
 class LoxFunction(
     private val declaration: LoxCallableDeclaration,

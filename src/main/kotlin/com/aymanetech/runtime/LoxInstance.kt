@@ -1,4 +1,7 @@
-package com.aymanetech
+package com.aymanetech.runtime
+
+import com.aymanetech.runtime.errors.RuntimeError
+import com.aymanetech.lexer.Token
 
 class LoxInstance(private val klass: LoxClass) {
     private val fields: MutableMap<String, Any?> = mutableMapOf()

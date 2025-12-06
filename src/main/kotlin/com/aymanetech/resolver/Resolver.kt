@@ -1,36 +1,39 @@
-package com.aymanetech
+package com.aymanetech.resolver
 
-import com.aymanetech.Expr.*
-import com.aymanetech.Lox.error
-import com.aymanetech.Stmt.*
-import java.util.*
+import com.aymanetech.interpreter.Interpreter
+import com.aymanetech.Lox
+import com.aymanetech.ast.Expr
+import com.aymanetech.ast.Stmt
+import com.aymanetech.lexer.Token
+import java.util.Stack
+import kotlin.collections.forEach
 
 class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.Visitor<Unit> {
     private val scopes: Stack<MutableMap<String, Boolean>> = Stack()
     private var currentFunction = FunctionType.NONE
     private var currentClass = ClassType.NONE
 
-    override fun visit(stmt: Block) {
+    override fun visit(stmt: Stmt.Block) {
         beginScope()
         resolve(stmt.statements)
         endScope()
     }
 
-    override fun visit(stmt: If) {
+    override fun visit(stmt: Stmt.If) {
         resolve(stmt.condition)
         resolve(stmt.thenBranch)
         stmt.elseBranch?.let { resolve(it) }
     }
 
-    override fun visit(stmt: Expression) {
+    override fun visit(stmt: Stmt.Expression) {
         resolve(stmt.expression)
     }
 
-    override fun visit(stmt: Print) {
+    override fun visit(stmt: Stmt.Print) {
         resolve(stmt.expression)
     }
 
-    override fun visit(stmt: Var) {
+    override fun visit(stmt: Stmt.Var) {
         declare(stmt.name)
         if (stmt.initializer != null) {
             resolve(stmt.initializer)
@@ -38,16 +41,16 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
         define(stmt.name)
     }
 
-    override fun visit(expr: Variable) {
+    override fun visit(expr: Expr.Variable) {
         if (scopes.isNotEmpty() && scopes.peek()[expr.name.lexeme] == false)
-            error(expr.name, "Can't read local variable in it's own initializer")
+            Lox.error(expr.name, "Can't read local variable in it's own initializer")
 
         resolveLocal(expr, expr.name)
     }
 
-    override fun visit(expr: Logical) {
+    override fun visit(expr: Expr.Logical) {
         resolve(expr.left)
-        resolve(expr.left)
+        resolve(expr.right)
     }
 
     override fun visit(expr: Expr.Set) {
@@ -55,29 +58,29 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
         resolve(expr.obj)
     }
 
-    override fun visit(expr: Super) {
+    override fun visit(expr: Expr.Super) {
         if(currentClass == ClassType.NONE)
-            error(expr.keyword, "Can't use 'super' outside of a class.")
+            Lox.error(expr.keyword, "Can't use 'super' outside of a class.")
         else if (currentClass != ClassType.SUBCLASS)
-            error(expr.keyword, "Can't use 'super' in a class without a superclass.")
+            Lox.error(expr.keyword, "Can't use 'super' in a class without a superclass.")
 
         resolveLocal(expr, expr.keyword)
     }
 
-    override fun visit(expr: This) {
+    override fun visit(expr: Expr.This) {
         if (currentClass == ClassType.NONE) {
-            error(expr.keyword, "Can't use 'this' outside of a method")
+            Lox.error(expr.keyword, "Can't use 'this' outside of a method")
             return
         }
         resolveLocal(expr, expr.keyword)
     }
 
-    override fun visit(expr: Call) {
+    override fun visit(expr: Expr.Call) {
         resolve(expr.callee)
         expr.arguments?.forEach(::resolve)
     }
 
-    override fun visit(expr: AnonymousFunction) {
+    override fun visit(expr: Expr.AnonymousFunction) {
         val enclosingFunction = currentFunction
         currentFunction = FunctionType.FUNCTION
         beginScope()
@@ -90,25 +93,25 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
         currentFunction = enclosingFunction
     }
 
-    override fun visit(expr: Assign) {
+    override fun visit(expr: Expr.Assign) {
         resolve(expr.value)
         resolveLocal(expr, expr.name)
     }
 
-    override fun visit(expr: Binary) {
+    override fun visit(expr: Expr.Binary) {
         resolve(expr.left)
         resolve(expr.right)
     }
 
-    override fun visit(expr: Grouping) {
+    override fun visit(expr: Expr.Grouping) {
         resolve(expr.expression)
     }
 
-    override fun visit(expr: Literal) {
+    override fun visit(expr: Expr.Literal) {
         // Literally nothing :joy
     }
 
-    override fun visit(expr: Unary) {
+    override fun visit(expr: Expr.Unary) {
         resolve(expr.right)
     }
 
@@ -118,28 +121,28 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
         resolveFunction(stmt, FunctionType.FUNCTION)
     }
 
-    override fun visit(stmt: While) {
+    override fun visit(stmt: Stmt.While) {
         resolve(stmt.condition)
         resolve(stmt.body)
     }
 
-    override fun visit(stmt: Return) {
+    override fun visit(stmt: Stmt.Return) {
         if (currentFunction == FunctionType.NONE)
-            error(stmt.token, "Can't return from top-level code")
+            Lox.error(stmt.token, "Can't return from top-level code")
 
         if (stmt.value != null && currentFunction == FunctionType.INITIALIZER)
-            error(stmt.token, "Can't return from a constructor")
+            Lox.error(stmt.token, "Can't return from a constructor")
 
         stmt.value?.let { resolve(it) }
     }
 
-    override fun visit(stmt: Class) {
+    override fun visit(stmt: Stmt.Class) {
         val enclosingClass = currentClass
         currentClass = ClassType.CLASS
         declare(stmt.name)
         define(stmt.name)
         if(stmt.superClass != null && stmt.name.lexeme.equals(stmt.superClass.name.lexeme))
-            error(stmt.superClass.name, "A class can't inherit from itself")
+            Lox.error(stmt.superClass.name, "A class can't inherit from itself")
 
         if (stmt.superClass != null){
             currentClass = ClassType.SUBCLASS
@@ -162,7 +165,7 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
         currentClass = enclosingClass
     }
 
-    override fun visit(expr: Get) {
+    override fun visit(expr: Expr.Get) {
         resolve(expr.obj)
     }
 
@@ -203,7 +206,7 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
         if (scopes.isEmpty()) return
         val scope = scopes.peek()
         if (scope.containsKey(name.lexeme))
-            error(name, "Already variable with this name in this scope")
+            Lox.error(name, "Already variable with this name in this scope")
         scope[name.lexeme] = false
 
     }
@@ -230,5 +233,3 @@ class Resolver(private val interpreter: Interpreter) : Expr.Visitor<Unit>, Stmt.
         NONE, CLASS, SUBCLASS
     }
 }
-
-

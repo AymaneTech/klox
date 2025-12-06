@@ -293,6 +293,7 @@ class Parser(private val tokens: List<Token>) {
             match(TRUE) -> Literal(true)
             match(NIL) -> Literal(null)
             match(NUMBER, STRING) -> Literal(previous().literal)
+            match(SUPER) -> superKeyword()
             match(THIS) -> This(previous())
             match(IDENTIFIER) -> Variable(previous())
             match(FN) -> anonymousFunction()
@@ -304,6 +305,13 @@ class Parser(private val tokens: List<Token>) {
 
             else -> throw error(peek(), "Expect expression.")
         }
+
+    private fun superKeyword(): Expr {
+        val keyword = previous()
+        consume(DOT, "Expect '.' after keyword")
+        val name = consume(IDENTIFIER, "Expect superclass method name")
+        return Super(keyword, name)
+    }
 
     private fun match(vararg types: TokenType): Boolean {
         for (type in types) {

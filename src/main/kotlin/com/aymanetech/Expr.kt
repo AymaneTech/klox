@@ -40,6 +40,10 @@ sealed class Expr : ExprVisitable {
         override fun <T> accept(visitor: Visitor<T>) = visitor.visit(this)
     }
 
+    data class Super(val keyword: Token, val method: Token): Expr() {
+        override fun <T> accept(visitor: Visitor<T>) = visitor.visit(this)
+    }
+
     data class This(val keyword: Token) : Expr() {
         override fun <T> accept(visitor: Visitor<T>) = visitor.visit(this)
     }
@@ -69,5 +73,6 @@ sealed class Expr : ExprVisitable {
         fun visit(expr: Get): T
         fun visit(expr: Set): T
         fun visit(expr: This): T
+        fun visit(expr: Super): T
     }
 }

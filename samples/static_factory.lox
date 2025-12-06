@@ -1,0 +1,21 @@
+class Point {
+  init(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+  
+  static origin() {
+    Point(0, 0)
+  }
+  
+  static fromPolar(r, theta) {
+    Point(r * 3.14159, r)
+  }
+  
+  distance() {
+    (this.x * this.x + this.y * this.y) ^ 0.5
+  }
+}
+
+var p = Point.origin();
+println(p.x + ", " + p.y);
